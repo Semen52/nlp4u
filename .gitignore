@@ -1,0 +1,6 @@
+.vscode/
+.idea/
+bot/*.ini
+data/external/
+data/intenal/
+external/
