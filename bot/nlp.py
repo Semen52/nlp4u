@@ -19,7 +19,7 @@ from telegram import InlineQueryResultArticle, ParseMode, \
     InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 
 from models.src.preprocessing import NLPPreprocessing
-
+from models.src.core import NLPCore
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
@@ -81,6 +81,7 @@ class NLPBot(object):
         self.mode = NLPMode.SENTI
 
         self.nlp_pre = NLPPreprocessing()
+        self.nlp_core = NLPCore()
 
     @property
     def get_token(self):
@@ -102,7 +103,7 @@ class NLPBot(object):
                                   '<b>Available modes:</b>\n'
                                   '    - Sentiment Analysis\n'
                                   '    - Classification\n'
-                                  '    - Key Word Search.\n\n'
+                                  '    - Key Word Search\n\n'
                                   '<b>Commands:</b>\n'
                                   '/mode - select type of analysis\n'
                                   '/help - show help message\n'
@@ -231,21 +232,41 @@ class NLPBot(object):
             bot.sendChatAction(chat_id=update.message.chat_id,
                                action=ChatAction.TYPING)
 
+            if text_lng == 'ru':
+                proc_result = 'Не доступен'
+            else:
+                proc_result = 'Not available'
+
             # Run analysis
-            time.sleep(2)
+            if self.mode == NLPMode.SENTI:
+                core_result = self.nlp_core.sentiment_analysis(text)
+            elif self.mode == NLPMode.CLASS:
+                core_result = self.nlp_core.classification(text)
+            elif self.mode == NLPMode.KEYWS:
+                core_result = self.nlp_core.key_word_search(text)
+            else:
+                core_result = ''
+
+            if core_result != '':
+                proc_result = core_result
+
+            time.sleep(1)
 
             # Send reply
             chat_obj = bot.getChat(chat_id=update.message.chat_id)
 
             if text_lng == 'ru':
                 reply_text = '<b>Пользователь:</b> ' + chat_obj.first_name.encode('utf-8') + '\n'
-                reply_text += '<b>Язык:</b> Русский'
+                reply_text += '<b>Язык:</b> Русский' + '\n'
+                reply_text += '<b>Результат:</b> ' + proc_result
             elif text_lng == 'en':
                 reply_text = '<b>User:</b> ' + chat_obj.first_name + '\n'
-                reply_text += '<b>Language:</b> English'
+                reply_text += '<b>Language:</b> English' + '\n'
+                reply_text += '<b>Result:</b> ' + proc_result
             else:
                 reply_text = '<b>User:</b> ' + chat_obj.first_name + '\n'
-                reply_text += '<b>Language:</b> Unknown'
+                reply_text += '<b>Language:</b> Unknown' + '\n'
+                reply_text += '<b>Result:</b> ' + proc_result
 
             update.message.reply_text(reply_text,
                                       quote=True,
