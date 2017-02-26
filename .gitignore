@@ -1,6 +1,14 @@
 .vscode/
 .idea/
+
 bot/*.ini
+
 data/external/
 data/intenal/
+
 external/
+references/
+
+models/notebooks/.*
+models/notebooks/__*
+models/word2vec/models/
