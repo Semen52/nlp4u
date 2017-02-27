@@ -2,13 +2,20 @@
 .idea/
 
 bot/*.ini
+bot/*.pyc
 
-data/external/
-data/intenal/
+data/
 
 external/
 references/
 
+models/*.pyc
+
+models/bow/*.pyc
+
 models/notebooks/.*
 models/notebooks/__*
+
+models/src/*.pyc
+
 models/word2vec/models/
