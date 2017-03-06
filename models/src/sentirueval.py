@@ -8,6 +8,7 @@
 # *************************************** #
 
 
+import sys
 import csv
 import pandas as pd
 
@@ -21,12 +22,16 @@ def load_as_csv(file_name):
 
 def load_as_df(file_name):
     print("Open file: {}".format(file_name))
-    with open(file_name) as opened_file:
-        data = pd.read_csv(opened_file, sep='\t', header=0)
+    with open(file_name, encoding='utf-8') as opened_file:
+        data = pd.read_csv(opened_file,
+                           sep='\t',
+                           header=0)
 
     print("Number of sentences: {}".format(len(data['text'])))
+    labels = data['sentiment']
+    text = data['text']
 
-    return data['sentiment'], data['text']
+    return labels, text
 
 
 def main(args=None):

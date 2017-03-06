@@ -11,6 +11,7 @@
 from gensim import corpora, matutils
 import os
 import sys
+import numpy as np
 
 sys.path.append(os.path.join(os.path.dirname(__file__),'../../'))
 from models.src.sentirueval import load_as_df
@@ -52,8 +53,8 @@ if __name__ == '__main__':
     main()
 
     # Load train and test data
-    train_labels, raw_train_corpus = load_as_df(NLPClassification.FILE_TRAIN_BANK)
-    test_labels, raw_test_corpus = load_as_df(NLPClassification.FILE_TEST_BANK)
+    train_labels, raw_train_corpus = load_as_df(NLPClassification.FILE_TRAIN_TTK)
+    test_labels, raw_test_corpus = load_as_df(NLPClassification.FILE_TEST_TTK)
 
     # Train model using train data
     train_vectors, dictionary = train_model(raw_train_corpus)
@@ -61,17 +62,35 @@ if __name__ == '__main__':
     # Apply trained model
     test_vectors = apply_model(dictionary, raw_test_corpus)
 
+    train_num_terms = len(dictionary.keys())
+    test_num_terms = len(test_vectors[1])
+    num_terms = train_num_terms
+
+    if train_num_terms < test_num_terms :
+        num_terms = test_num_terms
+
     # Transform vectors for scikit
-    train_vectors = matutils.corpus2csc(train_vectors)
-    test_vectors = matutils.corpus2csc(test_vectors)
+    train_vectors = matutils.corpus2dense(train_vectors, num_terms).transpose()
+    test_vectors = matutils.corpus2dense(test_vectors, num_terms).transpose()
 
     classifier = NLPClassification()
 
-    nb_classifier = classifier.train_nb_classifier(train_vectors.transpose(), train_labels)
-    classifier.test_classifier(nb_classifier, test_vectors.transpose(), test_labels)
+    # For binary classification
+    # train_labels = np.asarray(train_labels)
+    # index2save = train_labels != 'neutral'
+    # train_labels = train_labels[index2save]
+    # train_vectors = train_vectors[index2save, :]
+    #
+    # test_labels = np.asarray(test_labels)
+    # index2save = test_labels != 'neutral'
+    # test_labels = test_labels[index2save]
+    # test_vectors = test_vectors[index2save, :]
 
-    nb_classifier = classifier.train_nb2_classifier(train_vectors.transpose().toarray(), train_labels)
-    classifier.test_classifier(nb_classifier, test_vectors.transpose().toarray(), test_labels)
+    nb_classifier = classifier.train_nb_classifier(train_vectors, train_labels)
+    classifier.test_classifier(nb_classifier, test_vectors, test_labels)
 
-    classifier.test_all_classifiers(train_vectors.transpose().toarray(), train_labels,
-                                    test_vectors.transpose().toarray(), test_labels)
+    nb_classifier = classifier.train_nb2_classifier(train_vectors, train_labels)
+    classifier.test_classifier(nb_classifier, test_vectors, test_labels)
+
+    classifier.test_all_classifiers(train_vectors, train_labels,
+                                    test_vectors, test_labels)
